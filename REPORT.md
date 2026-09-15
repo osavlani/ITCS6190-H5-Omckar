@@ -1,8 +1,8 @@
 # Hands-on L5: Report
 
-**Name:**
-**Student ID:**
-**Email:**
+**Name:Omckar Savlani**
+**Student ID: 801497440**
+**Email: osavlani@charlotte.edu**
 
 ---
 
@@ -11,13 +11,60 @@
 The commands you used, in the order you used them. If you deviated from the steps in the
 README, say where and why.
 
-```bash
+docker --version
+:To confirm docker configuration
 
-```
+docker compose -f docker-compose.codespaces.yml up -d
+:To compose docker with codespace file, path defined in the command
 
+docker exec -it spark-master /opt/spark/bin/pyspark --master spark://spark-master:7077
+:To open the PySpark shell
+
+docker ps
+:To check if the nodes are live and running
+
+from pyspark.sql.functions import explode, split, length, col
+lines = spark.read.text("/opt/spark/work-dir/shared/input/data/input.txt")
+words = lines.select(explode(split(col("value"), r"\s+")).alias("word"))
+counts = words.filter(length("word") >= 3).groupBy("word").count()
+counts.orderBy(col("count").desc(), col("word")).show()
+:running the wordcount function directly from terminal
+
+counts.orderBy("word").show()
+:Table output is ordered by characters in the word instead of their overall count
+
+docker cp wordcount.py spark-master:/opt/spark/work-dir/
+:Copying wordcount.py from main to the working dir inside the shell
+
+docker exec -it spark-master /opt/spark/bin/spark-submit \
+  --master spark://spark-master:7077 \
+  /opt/spark/work-dir/wordcount.py \
+  /opt/spark/work-dir/shared/input/data/input.txt \
+  /opt/spark/work-dir/shared/output/wordcount
+:Assigning the master node our wordcount.py file for execution. Input and output dir and filenames also specified.
+
+docker cp wordcount.py spark-master:/opt/spark/work-dir/
+docker exec -it spark-master /opt/spark/bin/spark-submit \
+  --master spark://spark-master:7077 \
+  /opt/spark/work-dir/wordcount.py \
+  /opt/spark/work-dir/shared/input/data/input.txt \
+  /opt/spark/work-dir/shared/output/wordcount-v2
+:Copying changed file to working directory, and output file is given a different name
+
+docker cp wordcount.py spark-master:/opt/spark/work-dir/
+docker exec -it spark-master /opt/spark/bin/spark-submit \
+  --master spark://spark-master:7077 \
+  /opt/spark/work-dir/wordcount.py \
+  /opt/spark/work-dir/shared/input/data/input.txt \
+  /opt/spark/work-dir/shared/output/wordcount-long 5
+:Copying file again after further changes, again with a different name specified for output going to be generated
+
+docker compose -f docker-compose.codespaces.yml down
+:To compose down the docker containers, codespace file forced in the command
 ---
 
 ## Input and output
+
 
 ### My input dataset
 

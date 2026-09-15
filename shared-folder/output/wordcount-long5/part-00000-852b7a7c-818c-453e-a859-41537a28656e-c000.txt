@@ -1,0 +1,16 @@
+people 25
+dancing 14
+after 2
+cheetah 2
+joint 2
+people, 2
+print 2
+purple 2
+rolled 2
+booth, 1
+ceiling 1
+climb 1
+hanging 1
+roof, 1
+smoke 1
+tukker 1

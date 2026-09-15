@@ -9,19 +9,29 @@ The output directory must not already exist. If it is omitted, the result is onl
 import sys
 
 from pyspark.sql import SparkSession
-from pyspark.sql.functions import explode, split, length, col
+from pyspark.sql.functions import explode, split, length, col, lower
 
 if len(sys.argv) < 2:
     print(__doc__)
     sys.exit(2)
 
+min_len = int(sys.argv[3]) if len(sys.argv) > 3 else 5
+
 spark = SparkSession.builder.appName("WordCount").getOrCreate()
 
 lines = spark.read.text(sys.argv[1])
 words = lines.select(explode(split(col("value"), r"\s+")).alias("word"))
-counts = (words.filter(length("word") >= 3)
+counts = (words.withColumn("word", lower(col("word")))
+               .filter(length("word") >= min_len)
                .groupBy("word").count()
                .orderBy(col("count").desc(), col("word")))
+
+normalized = words.withColumn("word", lower(col("word")))
+total_words = normalized.count()
+kept_words  = normalized.filter(length("word") >= min_len).count()
+
+print(f"{total_words} words scanned")
+print(f"{kept_words} words of at least {min_len} characters")
 
 counts.show(50, truncate=False)
 print(f"{counts.count()} distinct words")
