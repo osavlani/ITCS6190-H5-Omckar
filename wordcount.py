@@ -15,7 +15,7 @@ if len(sys.argv) < 2:
     print(__doc__)
     sys.exit(2)
 
-min_len = int(sys.argv[3]) if len(sys.argv) > 3 else 5
+min_len = int(sys.argv[3]) if len(sys.argv) > 3 else 3
 
 spark = SparkSession.builder.appName("WordCount").getOrCreate()
 
@@ -26,12 +26,14 @@ counts = (words.withColumn("word", lower(col("word")))
                .groupBy("word").count()
                .orderBy(col("count").desc(), col("word")))
 
-normalized = words.withColumn("word", lower(col("word")))
-total_words = normalized.count()
-kept_words  = normalized.filter(length("word") >= min_len).count()
+normalized     = words.withColumn("word", lower(col("word")))
+total_words    = normalized.count()
+kept_words     = normalized.filter(length("word") >= min_len).count()
+distinct_words = counts.count()
 
 print(f"{total_words} words scanned")
 print(f"{kept_words} words of at least {min_len} characters")
+print(f"{distinct_words} distinct words")
 
 counts.show(50, truncate=False)
 print(f"{counts.count()} distinct words")
