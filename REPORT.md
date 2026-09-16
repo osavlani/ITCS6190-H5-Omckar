@@ -8,7 +8,7 @@
 
 ## What I ran
 
-` ` `
+` ` ` `
 
 The commands you used, in the order you used them. If you deviated from the steps in the
 README, say where and why.
@@ -64,11 +64,14 @@ docker exec -it spark-master /opt/spark/bin/spark-submit \
 docker compose -f docker-compose.codespaces.yml down
 :To compose down the docker containers, codespace file forced in the command
 
-git diff de49a3f c34406f -- wordcount.py > /tmp/wc.diff
+git log --oneline main
+:To get hash values of all different commits
+
+git diff de49a3f 0cf6f11 -- wordcount.py > /tmp/wc.diff
 code /tmp/wc.diff
 :To get code changes in wordcount.py file, transferred changes to a file as terminal (of codespace) keeps truncating output.
 
-` ` `
+` ` ` `
 
 ---
 
@@ -155,7 +158,7 @@ A few sentences on what you actually noticed. Some things worth looking at:
 - How many tasks and executors the Spark UI at <http://localhost:4040> listed for `show`
 - How long the job took, in the shell and with `spark-submit`
 
-I didn't note time taken by job but it was done in under or around ~12s. Setting up the image via docker took upto 120s.
+I didn't note time taken by job but it was done in under or around ~20s. Setting up the image via docker took upto 120s.
 
 Even after changing the function to normalize alphabet cases, if processed with punctuation for eg "the" and "the," both are considered seperate values as they compare as different strings. This happened because we set the space/empty character as a defining function to identify different strings. We can change the function to be more accurate by adding more conditions while defining the function.
 
@@ -163,9 +166,16 @@ Even after changing the function to normalize alphabet cases, if processed with 
 
 ## What I changed
 
-` ` `
+` ` ` `
 
-from pyspark.sql import SparkSession
+diff --git a/wordcount.py b/wordcount.py
+index 8d35956..2f76e51 100644
+--- a/wordcount.py
++++ b/wordcount.py
+@@ -9,20 +9,32 @@ The output directory must not already exist. If it is omitted, the result is onl
+ import sys
+ 
+ from pyspark.sql import SparkSession
 -from pyspark.sql.functions import explode, split, length, col
 +from pyspark.sql.functions import explode, split, length, col, lower
  
@@ -173,7 +183,7 @@ from pyspark.sql import SparkSession
      print(__doc__)
      sys.exit(2)
  
-+min_len = int(sys.argv[3]) if len(sys.argv) > 3 else 5
++min_len = int(sys.argv[3]) if len(sys.argv) > 3 else 3
 +
  spark = SparkSession.builder.appName("WordCount").getOrCreate()
  
@@ -185,15 +195,20 @@ from pyspark.sql import SparkSession
                 .groupBy("word").count()
                 .orderBy(col("count").desc(), col("word")))
  
-+normalized = words.withColumn("word", lower(col("word")))
-+total_words = normalized.count()
-+kept_words  = normalized.filter(length("word") >= min_len).count()
++normalized     = words.withColumn("word", lower(col("word")))
++total_words    = normalized.count()
++kept_words     = normalized.filter(length("word") >= min_len).count()
++distinct_words = counts.count()
 +
 +print(f"{total_words} words scanned")
 +print(f"{kept_words} words of at least {min_len} characters")
++print(f"{distinct_words} distinct words")
 +
-
-```python
+ counts.show(50, truncate=False)
+ print(f"{counts.count()} distinct words")
+ 
+-python
+` ` ` `
 
 ---
 
@@ -232,5 +247,8 @@ went wrong, say so.
 For step 9 part 2(min_len >=5) no folder was created as I copied previous command, and v2 dir already existed. Fixed that by identifying the correction
 step 9 dosent mention to copy wordcount.py again after min_len >=5 change. I'm not sure if change updates automatically but I copied file to working dir again before executing the job. (not mentioned to copy again in steps)
 
+Setting it up on codespaces, port forwarding isn't configuring so i'm unable to view my job scheduler/dashboard on both ports 4040 and 8080.
 
-
+Didnt use this command
+spark-submit wordcount.py <input file> [<output directory>] [<min word length>]
+as I always pushed changes and then ran the code after docker cp
