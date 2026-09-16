@@ -162,6 +162,11 @@ I didn't note time taken by job but it was done in under or around ~20s. Setting
 
 Even after changing the function to normalize alphabet cases, if processed with punctuation for eg "the" and "the," both are considered seperate values as they compare as different strings. This happened because we set the space/empty character as a defining function to identify different strings. We can change the function to be more accurate by adding more conditions while defining the function.
 
+- Answer to section 5:
+Java splits this into three files because MapReduce forces separate map/reduce classes plus a controller to configure the job before Maven builds it into a JAR. WordMapper tokenizes lines and emits (word, 1) for words 3+ chars, WordReducer sums and sorts those pairs, Controller wires it all together with input/output paths.
+
+PySpark collapses this into one script — no compile step, no separate classes. explode(split(...)) replaces the tokenizing loop, .filter(length("word") >= 3) replaces the length check, .groupBy("word").count() replaces the summing logic (Spark handles the shuffle internally instead of it being an explicit phase like in Hadoop), and .orderBy(count desc) replaces the sort logic.
+
 ---
 
 ## What I changed
